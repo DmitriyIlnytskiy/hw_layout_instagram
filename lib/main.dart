@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:readmore/readmore.dart';
+import 'package:badges/badges.dart'
+    as badges; // Aliased to avoid naming conflicts
 
 void main() {
   runApp(const MyApp());
@@ -25,13 +28,38 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const ProfileScreen(),
+      home: const ProfileScreen(), // Now calling a StatefulWidget
     );
   }
 }
 
-class ProfileScreen extends StatelessWidget {
+// CONVERTED to StatefulWidget
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // --- STATE VARIABLES ---
+  bool _isFollowing = false; // Toggles the Follow button
+  int _followersCount = 834; // Dynamic counter
+  bool _showGrid = true; // Toggles between Grid and Tagged tabs
+  int _currentBottomNavIndex = 4; // Starts on the Profile tab (index 4)
+
+  // Function to handle the follow button press
+  void _toggleFollow() {
+    setState(() {
+      _isFollowing = !_isFollowing;
+      // Increment or decrement the follower count based on the new state
+      if (_isFollowing) {
+        _followersCount++;
+      } else {
+        _followersCount--;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,14 +68,17 @@ class ProfileScreen extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.lock_outline, size: 16),
-            SizedBox(width: 4),
-            Text('dmytro_il'),
-            Icon(Icons.keyboard_arrow_down, size: 20),
+          children: [
+            const Icon(Icons.lock_outline, size: 16),
+            const SizedBox(width: 4),
+            const Text('dmytro_il'),
+            IconButton(
+              icon: const Icon(Icons.keyboard_arrow_down),
+              onPressed: () {},
+              iconSize: 20,
+            ),
           ],
         ),
-
         actions: [IconButton(icon: const Icon(Icons.menu), onPressed: () {})],
       ),
       body: SingleChildScrollView(
@@ -82,7 +113,11 @@ class ProfileScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildStatColumn('54', 'Posts'),
-                        _buildStatColumn('834', 'Followers'),
+                        // Using our dynamic _followersCount state variable here
+                        _buildStatColumn(
+                          _followersCount.toString(),
+                          'Followers',
+                        ),
                         _buildStatColumn('162', 'Following'),
                       ],
                     ),
@@ -91,7 +126,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            // Bio Section
+            // Bio Section (Using ReadMore Package)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
@@ -106,7 +141,7 @@ class ProfileScreen extends StatelessWidget {
                     text: const TextSpan(
                       style: TextStyle(color: Colors.black),
                       children: [
-                        TextSpan(text: 'Fun '),
+                        TextSpan(text: 'Software Engineering student at AUK. '),
                         TextSpan(
                           text: '@thebestone',
                           style: TextStyle(color: Colors.blue),
@@ -114,31 +149,56 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text('Everything is designed.'),
+                  const SizedBox(height: 6),
+                  // PACKAGE 1: ReadMoreText for expandable bio
+                  const ReadMoreText(
+                    'Everything is designed. Passionate about Python, Dart, and building modern web and mobile applications. Exploring the world of linear algebra and stats. 🚀',
+                    trimLines: 2,
+                    colorClickableText: Colors.blue,
+                    trimMode: TrimMode.Line,
+                    trimCollapsedText: ' more',
+                    trimExpandedText: ' less',
+                    style: TextStyle(color: Colors.black87),
+                    moreStyle: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                    lessStyle: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // Edit Profile Button
+            // Dynamic Follow / Edit Profile Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    side: BorderSide(color: Colors.grey.shade300),
+                child: ElevatedButton(
+                  // Call our setState function when pressed
+                  onPressed: _toggleFollow,
+                  style: ElevatedButton.styleFrom(
+                    // Change colors dynamically based on _isFollowing state
+                    backgroundColor: _isFollowing
+                        ? Colors.grey.shade200
+                        : Colors.blue,
+                    foregroundColor: _isFollowing ? Colors.black : Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Edit Profile',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    // Change text dynamically based on state
+                    _isFollowing ? 'Following' : 'Follow',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -146,7 +206,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Story Highlights
+            // Story Highlights (Unchanged)
             SizedBox(
               height: 100,
               child: ListView(
@@ -163,93 +223,113 @@ class ProfileScreen extends StatelessWidget {
 
             const Divider(height: 1),
 
-            // Tab Bar (Grid vs Tagged)
+            // Interactive Tab Bar (Grid vs Tagged)
             Row(
               children: [
                 Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.black, width: 1),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _showGrid = true; // Switch to Grid
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            // Highlight border if active
+                            color: _showGrid
+                                ? Colors.black
+                                : Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Icon(
+                        Icons.grid_on,
+                        // Change color if active
+                        color: _showGrid ? Colors.black : Colors.grey,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Icon(Icons.grid_on, color: Colors.black),
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Icon(
-                      Icons.person_pin_outlined,
-                      color: Colors.grey,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _showGrid = false; // Switch to Tagged
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: !_showGrid
+                                ? Colors.black
+                                : Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Icon(
+                        Icons.person_pin_outlined,
+                        color: !_showGrid ? Colors.black : Colors.grey,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
 
-            // Image Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics:
-                  const NeverScrollableScrollPhysics(), // Disables scrolling for the grid itself
-              itemCount: 12,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
-              ),
-              itemBuilder: (context, index) {
-                // List of placeholder images matching the vibe of your screenshot
-                List<String> images = [
-                  'assets/images/pic2.jpg',
-                  'assets/images/pic3.jpg',
-                  'assets/images/pic4.jpg',
-                  'assets/images/pic5.jpg',
-                  'assets/images/pic6.jpg',
-                  'assets/images/pic7.jpg',
-                  'assets/images/pic8.jpg',
-                  'assets/images/pic9.jpg',
-                  'assets/images/pic10.jpg',
-                  'assets/images/pic11.jpg',
-                  'assets/images/pic12.jpg',
-                  'assets/images/pic13.jpg',
-                ];
-                return Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(images[index]),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              },
-            ),
+            // Conditional Rendering based on Tab State
+            _showGrid ? _buildPhotoGrid() : _buildTaggedEmptyState(),
+
+            // Add some padding at the bottom so we can scroll past the last items easily
+            const SizedBox(height: 20),
           ],
         ),
       ),
 
-      // Bottom Navigation Bar
+      // Interactive Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        showSelectedLabels: false,
+        showSelectedLabels: false, // Changed to false to match Instagram
         showUnselectedLabels: false,
+        currentIndex: _currentBottomNavIndex, // Driven by state
+        onTap: (index) {
+          setState(() {
+            _currentBottomNavIndex = index; // Update active icon
+          });
+        },
         items: [
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, color: Colors.black, size: 30),
+            icon: Icon(Icons.home_outlined, size: 30),
+            activeIcon: Icon(Icons.home, size: 30), // Solid icon when active
             label: 'Home',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.black, size: 30),
+            icon: Icon(Icons.search, size: 30),
+            activeIcon: Icon(Icons.search, size: 30, weight: 800),
             label: 'Search',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.add_box_outlined, color: Colors.black, size: 30),
+            icon: Icon(Icons.add_box_outlined, size: 30),
+            activeIcon: Icon(Icons.add_box, size: 30),
             label: 'Add',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border, color: Colors.black, size: 30),
+          BottomNavigationBarItem(
+            // PACKAGE 2: Badges to show a notification dot/counter
+            icon: badges.Badge(
+              badgeContent: const Text(
+                '3',
+                style: TextStyle(color: Colors.white, fontSize: 10),
+              ),
+              position: badges.BadgePosition.topEnd(top: -5, end: -5),
+              child: const Icon(Icons.favorite_border, size: 30),
+            ),
+            activeIcon: const Icon(Icons.favorite, size: 30),
             label: 'Activity',
           ),
           BottomNavigationBarItem(
@@ -258,7 +338,13 @@ class ProfileScreen extends StatelessWidget {
               height: 30,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 1),
+                border: Border.all(
+                  // Show a black ring around the profile icon if it is the active tab
+                  color: _currentBottomNavIndex == 4
+                      ? Colors.black
+                      : Colors.transparent,
+                  width: 2,
+                ),
                 image: const DecorationImage(
                   image: AssetImage('assets/images/profile.jpg'),
                   fit: BoxFit.cover,
@@ -272,7 +358,73 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Helper widget for Stats (Posts, Followers, Following)
+  // --- EXTRACTED WIDGETS FOR CLEANLINESS ---
+
+  // Refactored Grid view
+  Widget _buildPhotoGrid() {
+    List<String> images = [
+      'assets/images/pic2.jpg',
+      'assets/images/pic3.jpg',
+      'assets/images/pic4.jpg',
+      'assets/images/pic5.jpg',
+      'assets/images/pic6.jpg',
+      'assets/images/pic7.jpg',
+      'assets/images/pic8.jpg',
+      'assets/images/pic9.jpg',
+      'assets/images/pic10.jpg',
+      'assets/images/pic11.jpg',
+      'assets/images/pic12.jpg',
+      'assets/images/pic13.jpg',
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: images.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 2,
+        mainAxisSpacing: 2,
+      ),
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(images[index]),
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Empty state for the "Tagged" tab
+  Widget _buildTaggedEmptyState() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 50.0),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.person_pin_outlined, size: 60, color: Colors.grey),
+            SizedBox(height: 10),
+            Text(
+              'Photos and Videos of You',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'When people tag you in photos, they\'ll appear here.',
+              style: TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper widget for Stats
   Widget _buildStatColumn(String count, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
